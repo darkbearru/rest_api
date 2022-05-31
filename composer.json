@@ -1,0 +1,29 @@
+{
+    "name": "a_abramenko/restapi",
+    "description": "This is the basis of an application based on the Rest API.",
+    "type": "project",
+    "license": "MIT",
+    "version": "0.1.0",
+    "keywords": ["Rest API", "Routing", "App Pattern"],
+    "autoload": {
+        "psr-4": {
+            "Abramenko\\RestAPI\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Alexey Abramenko",
+            "email": "a.abramenko@chita.ru"
+        }
+    ],
+    "require": {
+        "firebase/php-jwt": "^6.2",
+        "nikic/fast-route": "^1.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    },
+    "scripts": {
+        "test": "phpunit --testdox tests"
+    }
+}
