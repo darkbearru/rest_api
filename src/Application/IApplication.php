@@ -2,7 +2,6 @@
 
 namespace Abramenko\RestApi;
 
-use \Abramenko\RestApi\Provider;
 use \Abramenko\RestApi\Controller;
 
 
