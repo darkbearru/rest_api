@@ -5,7 +5,7 @@ use \Abramenko\RestApi\Controllers\Controller;
 
 class ControllerTest extends TestCase
 {
-    public function testCanCreateController(): void
+    public function testCanCreateAController(): void
     {
         $controller = new Controller();
         $this->assertEquals(
