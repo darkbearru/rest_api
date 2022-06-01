@@ -83,6 +83,19 @@ class Application implements IApplication, IRequest
     }
 
     /**
+     * fileGetContents
+     * Оболочка для теста работы функции получения данных с потока
+     *
+     * @param  mixed $input
+     * @return string
+     */
+    protected function fileGetContents($input = false): string
+    {
+        if (!empty($input)) return $input;
+        return file_get_contents('php://input');
+    }
+
+    /**
      * getRequestBody
      * Получаем тело запроса, и сразу пробуем его преобразовать в json
      * Если не получается возвращаем просто строку
@@ -91,7 +104,7 @@ class Application implements IApplication, IRequest
      */
     protected function getRequestBody(): string|array
     {
-        $data = file_get_contents('php://input');
+        $data = $this->FileGetContents();
         if (empty($data)) return '';
 
         try {
@@ -143,7 +156,7 @@ class Application implements IApplication, IRequest
         // Выполняем только если указан маршрут «по умолчанию»
         if (empty($this->_defaultRoute)) return;
         try {
-            call_user_func_array($this->_defaultRoute, $this->_requestVariables);
+            call_user_func_array($this->_defaultRoute, [$this->_requestVariables]);
         } catch (\Exception $e) {
         }
     }
