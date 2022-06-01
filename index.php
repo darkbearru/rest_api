@@ -1,10 +1,14 @@
 <?php
-
 // Используем строгую типизацию
 declare(strict_types=1);
 
-require __DIR__ . '/vendor/autoload.php';
+$loader = require __DIR__ . '/vendor/autoload.php';
 
-use \Abramenko\RestApi\Application;
+use Abramenko\RestApi\Test\Test;
+use Abramenko\RestApi\Application;
 
-$app = new Application();
+Test::Go();
+
+//$app = new Application();
+
+echo "11<br />";
