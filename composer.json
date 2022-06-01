@@ -1,22 +1,22 @@
 {
-    "name": "a_abramenko/restapi",
+    "name": "a_abramenko/rest-api",
     "description": "This is the basis of an application based on the Rest API.",
     "type": "project",
     "license": "MIT",
-    "version": "0.1.0",
     "keywords": ["Rest API", "Routing", "App Pattern"],
-    "autoload": {
-        "psr-4": {
-            "Abramenko\\RestAPI\\": "src/"
-        }
-    },
     "authors": [
         {
             "name": "Alexey Abramenko",
             "email": "a.abramenko@chita.ru"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "Abramenko\\RestApi\\": "src/"
+        }
+    },
     "require": {
+        "php": "^8.0",
         "firebase/php-jwt": "^6.2",
         "altorouter/altorouter": "^2.0"
     },

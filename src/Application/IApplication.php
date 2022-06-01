@@ -1,8 +1,8 @@
 <?php
 
-namespace Abramenko\RestApi;
+namespace Abramenko\RestApi\Application;
 
-use \Abramenko\RestApi\Controller;
+use \Abramenko\RestApi\Controllers\Controller;
 
 
 interface IApplication
