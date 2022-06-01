@@ -117,6 +117,12 @@ class Application implements IApplication, IRequest
         }
     }
 
+    /**
+     * matchRoutes
+     * Проверяем есть ли соответствующий запросу маршрут
+     *
+     * @return bool
+     */
     protected function matchRoutes(): bool
     {
         // Выполняем поиск роутингом подходящего маршрута
