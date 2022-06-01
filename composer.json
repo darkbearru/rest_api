@@ -25,5 +25,10 @@
     },
     "scripts": {
         "test": "phpunit --testdox tests"
-    }
+    },
+    "config": {
+       "platform": {
+           "php": "8.0"
+       }
+    }    
 }
