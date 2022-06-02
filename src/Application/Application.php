@@ -140,9 +140,12 @@ class Application implements IApplication, IRequest
     {
         // Выполняем поиск роутингом подходящего маршрута
         $match = $this->_router->match();
-
         if (is_array($match) && is_callable($match['target'])) {
-            call_user_func_array($match['target'], $match['params']);
+            echo "IsOk<br />";
+            call_user_func_array(
+                $match['target'],
+                [$this->_requestVariables]
+            );
             return true;
         }
 

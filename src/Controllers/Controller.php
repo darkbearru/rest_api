@@ -48,10 +48,10 @@ class Controller
      * @param  string $route – /[pathname], где pathname название маршрута 
      *                          без корневого указанного при создании класса
      *                          Детальное описание и возможные варианты http://altorouter.com/usage/mapping-routes.html
-     * @param  string $action – в формате "ClassName#Method"
+     * @param  string|array $action – в формате "ClassName#Method"
      * @return void
      */
-    public function routeGet(string $route, string $action): void
+    public function routeGet(string $route, string|object $action): void
     {
         $this->addRoute('GET', $route, $action);
     }
@@ -63,10 +63,10 @@ class Controller
      * P.S. Детальное описание параметров смотри в GET
      *
      * @param  string $route
-     * @param  string $action
+     * @param  string $action|array
      * @return void
      */
-    public function routePost(string $route, string $action): void
+    public function routePost(string $route, string|object $action): void
     {
         $this->addRoute('POST', $route, $action);
     }
@@ -78,10 +78,10 @@ class Controller
      * P.S. Детальное описание параметров смотри в GET
      *
      * @param  string $route
-     * @param  string $action
+     * @param  string $action|array
      * @return void
      */
-    public function routePut(string $route, string $action): void
+    public function routePut(string $route, string|object $action): void
     {
         $this->addRoute('PUT', $route, $action);
     }
@@ -93,10 +93,10 @@ class Controller
      * P.S. Детальное описание параметров смотри в GET
      *
      * @param  string $route
-     * @param  string $action
+     * @param  string $action|array
      * @return void
      */
-    public function routeDelete(string $route, string $action): void
+    public function routeDelete(string $route, string|object $action): void
     {
         $this->addRoute('DELETE', $route, $action);
     }
@@ -108,16 +108,15 @@ class Controller
 
      * @param  string $method
      * @param  string $route
-     * @param  string $action
+     * @param  string $action|array
      * @return void
      */
-    protected function addRoute(string $method, string $route, string $action): void
+    protected function addRoute(string $method, string $route, string|object $action): void
     {
         $this->_routes[] = [
             $method,
             $this->_route . $route,
-            $action,
-            str_replace('#', '_', strtolower($action))
+            $action
         ];
     }
 
