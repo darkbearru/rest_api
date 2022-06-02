@@ -13,6 +13,7 @@ class Application implements IApplication, IRequest
     private \AltoRouter $_router;
     private string | array  $_defaultRoute = '';
     private array $_requestVariables = [];
+    private bool $_redirectToRoot = true;
 
     public function __construct()
     {
@@ -37,8 +38,17 @@ class Application implements IApplication, IRequest
      */
     public function run(): void
     {
+        // Выполняем все необходимые предварительные установки
         $this->setup();
-        if (!$this->matchRoutes() && !empty($this->_defaultRoute)) {
+        // Выполняем поиск маршрута и если найден выходим
+        if ($this->matchRoutes()) return;
+
+        // Если необходимо то в случае несовпадения с корневым путём
+        // редиректим в корень
+        if ($this->_redirectToRoot) $this->checkRootRedirect();
+
+        // Если есть вывод по умолчанию, то делаем его
+        if (!empty($this->_defaultRoute)) {
             $this->defaultRoute();
         }
     }
@@ -52,6 +62,15 @@ class Application implements IApplication, IRequest
     public function getRequestVariables(): array
     {
         return $this->_requestVariables;
+    }
+
+    protected function checkRootRedirect(): void
+    {
+        if ($_SERVER['REQUEST_URI'] !== '/') {
+            header("HTTP/1.1 301 Moved Permanently");
+            header("location: /\r\n");
+            exit;
+        }
     }
 
 
@@ -141,7 +160,6 @@ class Application implements IApplication, IRequest
         // Выполняем поиск роутингом подходящего маршрута
         $match = $this->_router->match();
         if (is_array($match) && is_callable($match['target'])) {
-            echo "IsOk<br />";
             call_user_func_array(
                 $match['target'],
                 [$this->_requestVariables]
