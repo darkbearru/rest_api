@@ -3,11 +3,11 @@
 namespace Abramenko\RestApi\Services;
 
 use Abramenko\RestApi\Helpers\FormHelper;
-use Abramenko\RestApi\Models\UserModel;
+use Abramenko\RestApi\Models\{TokenModel, UserModel};
 
 class UserService extends Service
 {
-    public function Registration(array $params): bool|object
+    public function Registration(array $params): object|array
     {
         $params = $this->checkRegistrationForm($params);
         if (!empty($params['error'])) return $this->resultError($params['error']);
@@ -19,16 +19,16 @@ class UserService extends Service
             return $this->resultError(["Пользовательс с «{$email}» уже существует"]);
         }
 
+        $code = UserModel::SaveConfirmationCode($user['id']);
+        MailService::Send($user['email'], "<p>Необходимо <a href=\"http://localhost:8050/api/users/confirmate/{$code}\">подтвердить email</a></p>");
+
         $tokens = TokenService::Generate((array) $user);
+        TokenModel::Save($user['id'], $tokens['refresh']);
 
-        echo "Token:<pre>";
-        print_r($tokens);
-        echo "</pre>";
-
-        // Генерим токен
-        // Сохраняем RefreshToken в базу
-        // и отправляем пользователю письмо для проверки email
-        return true;
+        return [
+            "user" => $user,
+            "tokens" => $tokens
+        ];
     }
 
     public function Login(array $params): bool
