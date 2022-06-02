@@ -25,8 +25,11 @@ class UserController extends Controller
      */
     protected function setupRoutes()
     {
+        // Регистрация пользователя
         $this->routePost("/registration", function ($params) {
-            $this->_userService->Registration($params);
+            $this->responseJSON(
+                $this->_userService->Registration($params)
+            );
         });
     }
 }
