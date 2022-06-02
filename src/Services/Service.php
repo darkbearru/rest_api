@@ -3,14 +3,10 @@
 namespace Abramenko\RestApi\Services;
 
 use PDO;
-use Abramenko\RestApi\Libs\DB;
+use Abramenko\RestApi\Libraries\DataBase;
+
 
 abstract class Service
 {
     private PDO $_db;
-
-    public function __construct()
-    {
-        $this->_db = DB::getInstance();
-    }
 }
