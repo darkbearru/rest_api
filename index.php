@@ -7,6 +7,7 @@ $loader = require __DIR__ . '/vendor/autoload.php';
 use Abramenko\RestApi\Application\Application;
 use Abramenko\RestApi\Controllers\UserController;
 
+
 $app = new Application();
 
 $app->setDefaultRoute("routingTest");

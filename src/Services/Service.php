@@ -2,11 +2,24 @@
 
 namespace Abramenko\RestApi\Services;
 
-use PDO;
-use Abramenko\RestApi\Libraries\DataBase;
-
 
 abstract class Service
 {
-    private PDO $_db;
+
+    protected function resultOk(?object $data): object
+    {
+        return (object)[
+            "result" => "ok",
+            "errors" => false,
+            "data" => $data
+        ];
+    }
+
+    protected function resultError(string|array $errors = []): object
+    {
+        return (object)[
+            "result" => "error",
+            "errors" => $errors
+        ];
+    }
 }
