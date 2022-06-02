@@ -36,6 +36,63 @@ class UserModel
     }
 
     /**
+     * SaveConfirmationLink
+     * Сохраняем ссылку для подтверждения пользователя
+     *
+     * @param  int $userID
+     * @return string
+     */
+    public static function SaveConfirmationCode(int $userID): string
+    {
+        $hash = md5($userID . '-' . strtotime('now'));
+
+        $db = DataBase::getInstance();
+        // Сохраняем данные
+        $statement = $db->prepare(
+            "REPLACE INTO users_links (`user_id`, `link`, `created_at`) VALUES (:user_id, :link, now())"
+        );
+        $statement->execute([
+            ':user_id'  => $userID,
+            ':link'    => $hash
+        ]);
+        // Удаляем старые записи по данным для подтверждения
+        $statement = $db->prepare(
+            "DELETE FROM users_links WHERE created_at < DATE_ADD(now(), INTERVAL -1 WEEK)"
+        );
+        $statement->execute();
+
+        return $hash;
+    }
+
+    public static function checkConfirmationCode(string $link): bool
+    {
+        $db = DataBase::getInstance();
+        $statement = $db->prepare(
+            "SELECT id FROM users left join users_link  WHERE link=:link"
+        );
+        $statement->execute([':link' => $link]);
+        $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (empty($rows)) return false;
+
+        echo '<pre>';
+        print_r($rows);
+        echo '</pre>';
+        $statement = $db->prepare(
+            "UPDATE users SET is_activated=1 WHERE id=:id"
+        );
+        $statement->execute([':id' => $rows['id']]);
+
+        // Удаляем старые записи по данным для подтверждения
+        $statement = $db->prepare(
+            "DELETE FROM users_links WHERE user_id=:user_id"
+        );
+        $statement->execute([
+            ':user_id'  => $rows['id']
+        ]);
+    }
+
+    /**
      * IsUserExists
      * Проверяем на существование пользователя с таким email-ом
      *
