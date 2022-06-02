@@ -10,15 +10,15 @@ use PDO;
  */
 class DB
 {
-    public static PDO $instance;
+    private static PDO $instance;
 
     public static function getInstance(): PDO
     {
         if (is_null(self::$instance)) {
-            $dsn = 'mysql:dbname=db;host=127.0.0.1';
+            $database = 'mysql:dbname=db;host=127.0.0.1';
             $user = 'dbuser';
             $password = 'dbpass';
-            self::$instance = new PDO($dsn, $user, $password);
+            self::$instance = new PDO($database, $user, $password);
         }
         return self::$instance;
     }
