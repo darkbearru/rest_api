@@ -12,6 +12,7 @@ node_modules
 .DS_Store
 *.local
 *.lock
+.phpunit.result.cache
 
 # Editor directories and files
 .vscode/*
