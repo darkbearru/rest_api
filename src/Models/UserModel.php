@@ -2,6 +2,7 @@
 
 namespace Abramenko\RestApi\Models;
 
+use PDO;
 use Abramenko\RestApi\Libraries\DataBase;
 
 class UserModel
@@ -75,7 +76,7 @@ class UserModel
             "SELECT users.id FROM users left join users_links on users.id=users_links.user_id  WHERE link=:link"
         );
         $statement->execute([':link' => $link]);
-        $rows = $statement->fetch(\PDO::FETCH_ASSOC);
+        $rows = $statement->fetch(PDO::FETCH_ASSOC);
 
         if (empty($rows)) return false;
 
@@ -109,7 +110,7 @@ class UserModel
             "SELECT id FROM Users WHERE email=:email"
         );
         $statement->execute([':email' => $email]);
-        $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($rows)) return false;
         return true;
