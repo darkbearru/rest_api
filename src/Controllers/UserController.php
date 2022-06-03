@@ -23,13 +23,18 @@ class UserController extends Controller
      *
      * @return void
      */
-    protected function setupRoutes()
+    protected function setupRoutes(): void
     {
         // Регистрация пользователя
         $this->routePost("/registration", function ($params) {
             $this->responseJSON(
                 $this->_userService->Registration($params)
             );
+        });
+
+        // Подтверждение пользователя
+        $this->routeGet("/confirmation/[a:link]", function ($params) {
+            $this->_userService->Confirmate($params);
         });
     }
 }
