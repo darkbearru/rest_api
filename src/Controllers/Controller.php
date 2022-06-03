@@ -64,7 +64,7 @@ class Controller
      * @param  string|array $action – Наименование функции в строке или сама функция
      * @return void
      */
-    protected function routeGet(string $route, string|object $action): void
+    public function routeGet(string $route, string|object $action): void
     {
         $this->addRoute('GET', $route, $action);
     }
@@ -79,7 +79,7 @@ class Controller
      * @param  string $action|array
      * @return void
      */
-    protected function routePost(string $route, string|object $action): void
+    public function routePost(string $route, string|object $action): void
     {
         $this->addRoute('POST', $route, $action);
     }
@@ -94,7 +94,7 @@ class Controller
      * @param  string $action|array
      * @return void
      */
-    protected function routePut(string $route, string|object $action): void
+    public function routePut(string $route, string|object $action): void
     {
         $this->addRoute('PUT', $route, $action);
     }
@@ -109,7 +109,7 @@ class Controller
      * @param  string $action|array
      * @return void
      */
-    protected function routeDelete(string $route, string|object $action): void
+    public function routeDelete(string $route, string|object $action): void
     {
         $this->addRoute('DELETE', $route, $action);
     }
@@ -124,7 +124,7 @@ class Controller
      * @param  string $action|array
      * @return void
      */
-    protected function addRoute(string $method, string $route, string|object $action): void
+    public function addRoute(string $method, string $route, string|object $action): void
     {
         $this->_routes[] = [
             $method,
@@ -133,14 +133,14 @@ class Controller
         ];
     }
 
-    protected function responseJSON(array|object $response): void
+    public function responseJSON(array|object $response): void
     {
         header('Content-type: application/json; charset=utf-8');
         header('Last-Modified: ' . date('Y-m-d H:i:s'));
         echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
-    protected function responseHTML(array|object|string $response): void
+    public function responseHTML(array|object|string $response): void
     {
         header('Content-Type: text/html; charset=UTF-8');
         header('Last-Modified: ' . date('Y-m-d H:i:s'));
