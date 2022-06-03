@@ -1,4 +1,5 @@
 <?php
+namespace Application;
 
 use PHPUnit\Framework\TestCase;
 use \Abramenko\RestApi\Application\Application;
@@ -28,9 +29,6 @@ class ApplicationTest extends TestCase
         );
     }
 
-    /**
-     * @expectedException PHPUnit_Framework_Error
-     */
     public function testRunMethodIsWork(): void
     {
         $app = new Application();
@@ -50,14 +48,14 @@ class ApplicationTest extends TestCase
         $this->assertEquals(
             [
                 "variables" =>
-                [
-                    "name" => 'Alexey',
-                    "last-name" => "Abramenko",
-                    "users" => [
-                        "Alexey Ivanov",
-                        "Sergey Petrov"
-                    ]
-                ],
+                    [
+                        "name" => 'Alexey',
+                        "last-name" => "Abramenko",
+                        "users" => [
+                            "Alexey Ivanov",
+                            "Sergey Petrov"
+                        ]
+                    ],
                 "body" => [
                     "name" => "a_abramenko/rest-api",
                     "type" => "project",
