@@ -66,6 +66,7 @@ class Application implements IApplication, IRequest
 
     protected function checkRootRedirect(): void
     {
+        if (empty($_SERVER['REQUEST_URI'])) return;
         if ($_SERVER['REQUEST_URI'] !== '/') {
             header("HTTP/1.1 301 Moved Permanently");
             header("location: /\r\n");
@@ -139,14 +140,17 @@ class Application implements IApplication, IRequest
      * В зависимости от добавленных контролеров настраиваем маршрутизацию
      *
      * @return void
+     * @throws
      */
     protected function setupRoutes(): void
     {
         if (empty($this->_controllers)) return;
 
+        $routes = [];
         foreach ($this->_controllers as $name => $controller) {
-            $this->_router->addRoutes($controller->getRoutes());
+            $routes += $controller->getRoutes();
         }
+        $this->_router->addRoutes($routes);
     }
 
     /**
@@ -160,6 +164,7 @@ class Application implements IApplication, IRequest
         // Выполняем поиск роутингом подходящего маршрута
         $match = $this->_router->match();
         if (is_array($match) && is_callable($match['target'])) {
+            $this->_requestVariables["variables"] += $match['params'];
             call_user_func_array(
                 $match['target'],
                 [$this->_requestVariables]
