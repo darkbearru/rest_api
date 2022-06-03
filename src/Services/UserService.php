@@ -7,6 +7,10 @@ use Abramenko\RestApi\Models\{TokenModel, UserModel};
 
 class UserService extends Service
 {
+    /**
+     * @param array $params
+     * @return object|array
+     */
     public function Registration(array $params): object|array
     {
         $params = $this->checkRegistrationForm($params);
@@ -20,9 +24,9 @@ class UserService extends Service
         }
 
         $code = UserModel::SaveConfirmationCode($user['id']);
-        MailService::Send($user['email'], "<p>Необходимо <a href=\"http://localhost:8050/api/users/confirmate/{$code}\">подтвердить email</a></p>");
+        MailService::Send($user['email'], "<p>Необходимо <a href=\"http://localhost:8050/api/users/confirmation/{$code}\">подтвердить email</a></p>");
 
-        $tokens = TokenService::Generate((array) $user);
+        $tokens = TokenService::Generate((array)$user);
         TokenModel::Save($user['id'], $tokens['refresh']);
 
         return [
@@ -31,16 +35,35 @@ class UserService extends Service
         ];
     }
 
+    public function Confirmate(array $params): bool
+    {
+        if (empty($params['variables'])) return false;
+        if (empty($params['variables']['link'])) return false;
+        $link = $params['variables']['link'];
+        return UserModel::checkConfirmationCode($link);
+    }
+
+    /**
+     * @param array $params
+     * @return bool
+     */
     public function Login(array $params): bool
     {
         return true;
     }
 
+    /**
+     * @param array|null $params
+     * @return bool
+     */
     public function Logout(?array $params): bool
     {
         return true;
     }
 
+    /**
+     * @return bool
+     */
     public static function isLogined(): bool
     {
         return true;
@@ -50,7 +73,7 @@ class UserService extends Service
      * checkRegistrationForm
      * Метод проверки данных регистрационной формы
      *
-     * @param  array $params
+     * @param array $params
      * @return array
      */
     protected function checkRegistrationForm(array $params): array
