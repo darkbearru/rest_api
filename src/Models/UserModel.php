@@ -8,13 +8,18 @@ class UserModel
 {
     /**
      * New
+     * Создание нового пользователя
      *
-     * @param  string $email
-     * @param  string $password
-     * @return bool
+     * @param string $email
+     * @param string $password
+     * @return bool|array
      */
     public static function New(string $email, string $password): bool|array
     {
+        $email = trim($email);
+        $password = trim($password);
+        if (empty($email) || empty($password)) return false;
+
         $db = DataBase::getInstance();
 
         if (self::IsUserExists($email)) return false;
@@ -23,16 +28,14 @@ class UserModel
             "INSERT INTO users (`email`,`password`, `created_at`, `changed_at`) VALUES (:email, :password, now(), now())"
         );
         $statement->execute([
-            ':email'    => $email,
+            ':email' => $email,
             ':password' => md5($password)
         ]);
         $id = $db->lastInsertId();
-        $user = [
+        return [
             "id" => $id,
             "email" => $email
         ];
-
-        return $user;
     }
 
     /**
@@ -67,17 +70,15 @@ class UserModel
     public static function checkConfirmationCode(string $link): bool
     {
         $db = DataBase::getInstance();
+
         $statement = $db->prepare(
-            "SELECT id FROM users left join users_link  WHERE link=:link"
+            "SELECT users.id FROM users left join users_links on users.id=users_links.user_id  WHERE link=:link"
         );
         $statement->execute([':link' => $link]);
-        $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $statement->fetch(\PDO::FETCH_ASSOC);
 
         if (empty($rows)) return false;
 
-        echo '<pre>';
-        print_r($rows);
-        echo '</pre>';
         $statement = $db->prepare(
             "UPDATE users SET is_activated=1 WHERE id=:id"
         );
@@ -90,6 +91,7 @@ class UserModel
         $statement->execute([
             ':user_id'  => $rows['id']
         ]);
+        return true;
     }
 
     /**
@@ -111,5 +113,23 @@ class UserModel
 
         if (empty($rows)) return false;
         return true;
+    }
+
+    /**
+     * DeleteUser
+     * Удаление пользователя
+     *
+     * @param string|int $user User ID или User Email
+     * @return bool
+     */
+    public static function DeleteUser(string|int $user): bool
+    {
+        $db = DataBase::getInstance();
+
+        $statement = $db->prepare(
+            "DELETE FROM Users WHERE " . (is_int($user) ? "id" : "email") . "=:user"
+        );
+        return $statement->execute([':user' => $user]);
+
     }
 }
