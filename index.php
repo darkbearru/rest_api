@@ -7,16 +7,20 @@ $loader = require __DIR__ . '/vendor/autoload.php';
 use Abramenko\RestApi\Application\Application;
 use Abramenko\RestApi\Controllers\UserController;
 
-
 $app = new Application();
 
 $app->setDefaultRoute("routingTest");
 $app->addController(new UserController());
 
-$app->run();
+try {
+    if (!$app->run()) {
+        echo "No Default Page<br />";
+    }
+} catch (Throwable$e) {
+}
 
 
-function routingTest($variables)
+function routingTest($variables): void
 {
     echo "Default Route is work<br />";
     echo "<pre>";
