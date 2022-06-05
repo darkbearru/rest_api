@@ -1,4 +1,5 @@
 <?php
+
 namespace Application;
 
 use PHPUnit\Framework\TestCase;
@@ -72,13 +73,15 @@ class ApplicationTest extends TestCase
     public function testDoesTheDefaultRouteWork(): void
     {
         $app = new Application();
-        $app->setDefaultRoute("applicationDefaultRoute");
+        $app->setDefaultRoute(function ($params) {
+            applicationDefaultRoute($params);
+        });
         $app->run();
         $this->expectOutputString("Default Route is Work");
     }
 }
 
-function applicationDefaultRoute($variables)
+function applicationDefaultRoute($variables): void
 {
     echo "Default Route is Work";
 }

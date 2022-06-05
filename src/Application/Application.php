@@ -4,14 +4,16 @@ namespace Abramenko\RestApi\Application;
 
 use Abramenko\RestApi\Controllers\Controller;
 
+use Abramenko\RestApi\Application\Exceptions\{ApplicationThrowable, ApplicationException};
+
 /**
  * Application
  */
-class Application implements IApplication, IRequest
+class Application
 {
     private array $_controllers = [];
     private \AltoRouter $_router;
-    private string | array  $_defaultRoute = '';
+    private string|object|array $_defaultRoute = '';
     private array $_requestVariables = [];
     private bool $_redirectToRoot = true;
 
@@ -23,57 +25,44 @@ class Application implements IApplication, IRequest
     /**
      * addController
      *
-     * @param  mixed $controller
+     * @param mixed $controller
      * @return void
      */
     public function addController(Controller $controller): void
     {
-        $this->_controllers[(string) $controller] = $controller;
+        $this->_controllers[(string)$controller] = $controller;
     }
 
     /**
      * run
      *
      * @return void
+     * @throws ApplicationException
+     * @throws ApplicationThrowable
      */
-    public function run(): void
+    public function run(): bool
     {
-        // Выполняем все необходимые предварительные установки
-        $this->setup();
-        // Выполняем поиск маршрута и если найден выходим
-        if ($this->matchRoutes()) return;
+        try {
+            // Выполняем все необходимые предварительные установки
+            $this->setup();
+            // Выполняем поиск маршрута и если найден выходим
+            if ($this->matchRoutes()) return true;
 
-        // Если необходимо то в случае несовпадения с корневым путём
-        // редиректим в корень
-        if ($this->_redirectToRoot) $this->checkRootRedirect();
+            // Если необходимо то в случае несовпадения с корневым путём
+            // редиректим в корень
+            if ($this->_redirectToRoot) $this->checkRootRedirect();
 
-        // Если есть вывод по умолчанию, то делаем его
-        if (!empty($this->_defaultRoute)) {
-            $this->defaultRoute();
+            // Если есть вывод по умолчанию, то делаем его
+            if (!empty($this->_defaultRoute)) {
+                return $this->defaultRoute();
+            }
+        } catch (\Exception $e) {
+            throw new ApplicationException($e);
+        } catch (\Throwable $e) {
+            throw new ApplicationThrowable($e);
         }
+        return false;
     }
-
-    public function setDefaultRoute(array|string $route): void
-    {
-        $this->_defaultRoute = $route;
-    }
-
-
-    public function getRequestVariables(): array
-    {
-        return $this->_requestVariables;
-    }
-
-    protected function checkRootRedirect(): void
-    {
-        if (empty($_SERVER['REQUEST_URI'])) return;
-        if ($_SERVER['REQUEST_URI'] !== '/') {
-            header("HTTP/1.1 301 Moved Permanently");
-            header("location: /\r\n");
-            exit;
-        }
-    }
-
 
     /**
      * setup
@@ -87,7 +76,6 @@ class Application implements IApplication, IRequest
         $this->setupRoutes();
     }
 
-
     /**
      * setupVariables
      * Получаем все возможные элементы окружения
@@ -97,30 +85,18 @@ class Application implements IApplication, IRequest
     protected function setupRequestVariables(): void
     {
         $this->_requestVariables = [
-            "variables"  => (!empty($_REQUEST) ? $_REQUEST : []),
-            "body"       => $this->getRequestBody()
+            "variables" => (!empty($_REQUEST) ? $_REQUEST : []),
+            "body" => $this->getRequestBody()
         ];
-    }
-
-    /**
-     * fileGetContents
-     * Оболочка для теста работы функции получения данных с потока
-     *
-     * @param  mixed $input
-     * @return string
-     */
-    protected function fileGetContents($input = false): string
-    {
-        if (!empty($input)) return $input;
-        return file_get_contents('php://input');
     }
 
     /**
      * getRequestBody
      * Получаем тело запроса, и сразу пробуем его преобразовать в json
      * Если не получается возвращаем просто строку
-     * 
+     *
      * @return string|array
+     * @throws ApplicationException
      */
     protected function getRequestBody(): string|array
     {
@@ -130,9 +106,22 @@ class Application implements IApplication, IRequest
         try {
             $data = json_decode($data, true);
         } catch (\Exception $e) {
-            throw $e;
+            throw new ApplicationException($e);
         }
         return $data;
+    }
+
+    /**
+     * fileGetContents
+     * Оболочка для теста работы функции получения данных с потока
+     *
+     * @param mixed $input
+     * @return string
+     */
+    protected function fileGetContents($input = false): string
+    {
+        if (!empty($input)) return $input;
+        return file_get_contents('php://input');
     }
 
     /**
@@ -177,13 +166,34 @@ class Application implements IApplication, IRequest
         return false;
     }
 
-    protected function defaultRoute(): void
+    protected function checkRootRedirect(): void
+    {
+        if (empty($_SERVER['REQUEST_URI'])) return;
+        if ($_SERVER['REQUEST_URI'] !== '/') {
+            header("HTTP/1.1 301 Moved Permanently");
+            header("location: /\r\n");
+            exit;
+        }
+    }
+
+    protected function defaultRoute(): bool
     {
         // Выполняем только если указан маршрут «по умолчанию»
-        if (empty($this->_defaultRoute)) return;
-        try {
-            call_user_func_array($this->_defaultRoute, [$this->_requestVariables]);
-        } catch (\Exception $e) {
-        }
+        if (empty($this->_defaultRoute)) return false;
+        if (!function_exists($this->_defaultRoute)) return false;
+
+        call_user_func_array($this->_defaultRoute, [$this->_requestVariables]);
+
+        return true;
+    }
+
+    public function setDefaultRoute(array|object|string $route): void
+    {
+        $this->_defaultRoute = $route;
+    }
+
+    public function getRequestVariables(): array
+    {
+        return $this->_requestVariables;
     }
 }
