@@ -8,6 +8,15 @@ use Abramenko\RestApi\Models\{TokenModel, UserModel};
 class UserService extends Service
 {
     /**
+     * @return bool
+     */
+    public static function isLogined(): bool
+    {
+
+        return true;
+    }
+
+    /**
      * @param array $params
      * @return object|array
      */
@@ -29,44 +38,18 @@ class UserService extends Service
         $tokens = TokenService::Generate((array)$user);
         TokenModel::Save($user['id'], $tokens['refresh']);
 
+        setcookie(
+            "refreshToken",
+            $tokens["refresh"],
+            [
+                "httponly" => true,
+                "expires" => time() + TokenService::REFRESH_TOKEN_LIFETIME * 60 * 60 * 24
+            ]
+        );
         return [
             "user" => $user,
-            "tokens" => $tokens
+            "accessToken" => $tokens["access"]
         ];
-    }
-
-    public function Confirmate(array $params): bool
-    {
-        if (empty($params['variables'])) return false;
-        if (empty($params['variables']['link'])) return false;
-        $link = $params['variables']['link'];
-        return UserModel::checkConfirmationCode($link);
-    }
-
-    /**
-     * @param array $params
-     * @return bool
-     */
-    public function Login(array $params): bool
-    {
-        return true;
-    }
-
-    /**
-     * @param array|null $params
-     * @return bool
-     */
-    public function Logout(?array $params): bool
-    {
-        return true;
-    }
-
-    /**
-     * @return bool
-     */
-    public static function isLogined(): bool
-    {
-        return true;
     }
 
     /**
@@ -94,5 +77,31 @@ class UserService extends Service
             return ["errors" => $errors];
         }
         return ["variables" => $variables];
+    }
+
+    public function Confirmation(array $params): bool
+    {
+        if (empty($params['variables'])) return false;
+        if (empty($params['variables']['link'])) return false;
+        $link = $params['variables']['link'];
+        return UserModel::checkConfirmationCode($link);
+    }
+
+    /**
+     * @param array $params
+     * @return bool
+     */
+    public function Login(array $params): bool
+    {
+        return true;
+    }
+
+    /**
+     * @param array|null $params
+     * @return bool
+     */
+    public function Logout(?array $params): bool
+    {
+        return true;
     }
 }
