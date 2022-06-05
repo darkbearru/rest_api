@@ -34,7 +34,7 @@ class UserController extends Controller
 
         // Подтверждение пользователя
         $this->routeGet("/confirmation/[a:link]", function ($params) {
-            $this->_userService->Confirmate($params);
+            $this->_userService->Confirmation($params);
         });
     }
 }
