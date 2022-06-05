@@ -180,7 +180,9 @@ class Application
     {
         // Выполняем только если указан маршрут «по умолчанию»
         if (empty($this->_defaultRoute)) return false;
-        if (!function_exists($this->_defaultRoute)) return false;
+        if (is_string($this->_defaultRoute)) {
+            if (!function_exists($this->_defaultRoute)) return false;
+        }
 
         call_user_func_array($this->_defaultRoute, [$this->_requestVariables]);
 

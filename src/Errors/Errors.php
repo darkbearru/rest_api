@@ -9,7 +9,11 @@ class Errors
     #[NoReturn] public static function showError(int $code, string $message, string $template = ''): void
     {
         ob_clean();
-        header($_SERVER['SERVER_PROTOCOL'] . " {$code} Internal Server Error");
+        if (!empty ($_SERVER)) {
+            if (!empty ($_SERVER['SERVER_PROTOCOL'])) {
+                header($_SERVER['SERVER_PROTOCOL'] . " {$code} Internal Server Error");
+            }
+        }
         echo $message;
         //header("location: /\r\n");
         if (!empty ($template)) {
