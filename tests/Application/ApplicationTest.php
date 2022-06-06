@@ -2,6 +2,8 @@
 
 namespace Application;
 
+use Abramenko\RestApi\Application\Exceptions\ApplicationException;
+use Abramenko\RestApi\Application\Exceptions\ApplicationThrowable;
 use PHPUnit\Framework\TestCase;
 use \Abramenko\RestApi\Application\Application;
 
@@ -37,6 +39,10 @@ class ApplicationTest extends TestCase
         $this->expectOutputString("");
     }
 
+    /**
+     * @throws ApplicationThrowable
+     * @throws ApplicationException
+     */
     public function testParseRequestToServer(): void
     {
         $_REQUEST['name'] = 'Alexey';
@@ -48,23 +54,14 @@ class ApplicationTest extends TestCase
         $app->run();
         $this->assertEquals(
             [
-                "variables" =>
-                    [
-                        "name" => 'Alexey',
-                        "last-name" => "Abramenko",
-                        "users" => [
-                            "Alexey Ivanov",
-                            "Sergey Petrov"
-                        ]
-                    ],
-                "body" => [
-                    "name" => "a_abramenko/rest-api",
-                    "type" => "project",
-                    "license" => "MIT",
-                    "keywords" => [
-                        "Rest API", "Routing", "App Pattern"
-                    ]
-                ]
+                'name' => 'a_abramenko/rest-api',
+                'last-name' => 'Abramenko',
+                'users' => [
+                    "Alexey Ivanov", "Sergey Petrov"
+                ],
+                'type' => 'project',
+                'license' => 'MIT',
+                'keywords' => ["Rest API", "Routing", "App Pattern"]
             ],
             $app->getRequestVariables()
         );
