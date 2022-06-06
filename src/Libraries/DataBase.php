@@ -2,9 +2,13 @@
 
 namespace Abramenko\RestApi\Libraries;
 
+/**
+ * Database
+ * Singleton PDO
+ */
 class DataBase
 {
-    private static $_instance;
+    private static ?\PDO $_instance = null;
 
     public static function getInstance(): \PDO
     {
