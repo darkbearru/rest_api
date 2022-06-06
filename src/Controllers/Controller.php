@@ -8,6 +8,7 @@ namespace Abramenko\RestApi\Controllers;
 class Controller
 {
     protected array $_routes = [];
+
     /**
      * __construct
      *
@@ -58,10 +59,10 @@ class Controller
      * *Добавляем обработчик метода GET для определённого маршрута
      * Получение данных
      *
-     * @param  string $route – /[pathname], где pathname название маршрута 
+     * @param string $route – /[pathname], где pathname название маршрута
      *                          без корневого указанного при создании класса
      *                          Детальное описание и возможные варианты http://altorouter.com/usage/mapping-routes.html
-     * @param  string|array $action – Наименование функции в строке или сама функция
+     * @param string|object $action – Наименование функции в строке или сама функция
      * @return void
      */
     public function routeGet(string $route, string|object $action): void
@@ -70,13 +71,31 @@ class Controller
     }
 
     /**
+     * addRoute
+     * *Массив в формате для пакетного добавления \AltoRouter->addRoutes
+     * Пример: ['GET','/users/[i:id]', 'users#update', 'update_user']
+     * @param string $method
+     * @param string $route
+     * @param string|object $action
+     * @return void
+     */
+    public function addRoute(string $method, string $route, string|object $action): void
+    {
+        $this->_routes[] = [
+            $method,
+            $this->_route . $route,
+            $action
+        ];
+    }
+
+    /**
      * routePost
      * *Добавляем обработчик метода POST для определённого маршрута
      * Создание/добавление данных
      * P.S. Детальное описание параметров смотри в GET
      *
-     * @param  string $route
-     * @param  string $action|array
+     * @param string $route
+     * @param string|object $action
      * @return void
      */
     public function routePost(string $route, string|object $action): void
@@ -90,8 +109,8 @@ class Controller
      * Изменение данных
      * P.S. Детальное описание параметров смотри в GET
      *
-     * @param  string $route
-     * @param  string $action|array
+     * @param string $route
+     * @param string|object $action
      * @return void
      */
     public function routePut(string $route, string|object $action): void
@@ -105,8 +124,8 @@ class Controller
      * Удаление данных
      * P.S. Детальное описание параметров смотри в GET
      *
-     * @param  string $route
-     * @param  string $action|array
+     * @param string $route
+     * @param string|object $action
      * @return void
      */
     public function routeDelete(string $route, string|object $action): void
@@ -114,55 +133,10 @@ class Controller
         $this->addRoute('DELETE', $route, $action);
     }
 
-    /**
-     * addRoute
-     * *Массив в формате для пакетного добавления \AltoRouter->addRoutes
-     * Пример: ['GET','/users/[i:id]', 'users#update', 'update_user']
-
-     * @param  string $method
-     * @param  string $route
-     * @param  string $action|array
-     * @return void
-     */
-    public function addRoute(string $method, string $route, string|object $action): void
-    {
-        $this->_routes[] = [
-            $method,
-            $this->_route . $route,
-            $action
-        ];
-    }
-
     public function responseJSON(array|object $response): void
     {
         header('Content-type: application/json; charset=utf-8');
         header('Last-Modified: ' . date('Y-m-d H:i:s'));
         echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    }
-
-    public function responseHTML(array|object|string $response): void
-    {
-        header('Content-Type: text/html; charset=UTF-8');
-        header('Last-Modified: ' . date('Y-m-d H:i:s'));
-        if (isset($this->_templateEngine)) {
-            $this->showTemplate($response);
-            return;
-        }
-        if (is_object($response) || is_array($response)) {
-            $response = json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        }
-        echo $response;
-    }
-
-    /**
-     * showTemplate
-     * Функция для переопределения при наследовании, 
-     * внутри которой можно будет делать вызов любого шаблонизатора
-     *
-     * @param  mixed $response
-     * @return void
-     */
-    protected function showTemplate(array|object|string $response): void
-    {
     }
 }
