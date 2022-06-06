@@ -47,6 +47,7 @@ class UserService extends Service
             ]
         );
         return [
+            "result" => true,
             "user" => $user,
             "accessToken" => $tokens["access"]
         ];
@@ -79,12 +80,18 @@ class UserService extends Service
         return ["variables" => $variables];
     }
 
-    public function Confirmation(array $params): bool
+    public function Confirmation(array $params): array|object
     {
-        if (empty($params['variables'])) return false;
-        if (empty($params['variables']['link'])) return false;
+        if (empty($params['variables'])) return $this->resultError(["Данные не преданы или не распознаны"]);
+
+        if (empty($params['variables']['link'])) return $this->resultError(["Код подтверждения не указан"]);
+
         $link = $params['variables']['link'];
-        return UserModel::checkConfirmationCode($link);
+        $result = UserModel::checkConfirmationCode($link);
+        if (!$result) return $this->resultError(["Неверный код подтверждения"]);
+        return [
+            "result" => true
+        ];
     }
 
     /**
