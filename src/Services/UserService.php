@@ -10,7 +10,7 @@ class UserService extends Service
     /**
      * @return bool
      */
-    public static function isLogined(): bool
+    public static function Authorized(): bool
     {
 
         return true;
@@ -33,7 +33,7 @@ class UserService extends Service
         }
 
         $code = UserModel::SaveConfirmationCode($user['id']);
-        MailService::Send($user['email'], "<p>Необходимо <a href=\"http://localhost:8050/api/users/confirmation/{$code}\">подтвердить email</a></p>");
+        MailService::Send($user['email'], "<p>Необходимо <a href=\"http://localhost:8050/api/users/confirmation/$code\">подтвердить email</a></p>");
 
         $tokens = TokenService::Generate((array)$user);
         TokenModel::Save($user['id'], $tokens['refresh']);
@@ -62,14 +62,9 @@ class UserService extends Service
      */
     protected function checkRegistrationForm(array $params): array
     {
-        $variables = $params['variables'];
-        if (!empty($params['body'])) {
-            $variables = $params['body'];
-        }
-        $variables['email'] = (!empty($variables['email']) ? $variables['email'] : '');
-        $variables['password'] = (!empty($variables['password']) ? $variables['password'] : '');
-        $isEmail = FormHelper::isEmail($variables['email']);
-        $isPassword = FormHelper::isPassword($variables['password']);
+        $params = FormHelper::checkFormData($params, 'email', 'password');
+        $isEmail = FormHelper::isEmail($params['email']);
+        $isPassword = FormHelper::isPassword($params['password']);
 
         if (!$isEmail || !$isPassword) {
             $errors = [];
@@ -77,16 +72,16 @@ class UserService extends Service
             if (!$isPassword) $errors[] = 'Неверно указан формат пароля (от 7 до 20 символов с использованием цифр, различного регистра)';
             return ["errors" => $errors];
         }
-        return ["variables" => $variables];
+        return ["variables" => $params];
     }
 
     public function Confirmation(array $params): array|object
     {
-        if (empty($params['variables'])) return $this->resultError(["Данные не преданы или не распознаны"]);
+        if (empty($params)) return $this->resultError(["Данные не преданы или не распознаны"]);
 
-        if (empty($params['variables']['link'])) return $this->resultError(["Код подтверждения не указан"]);
+        if (empty($params['link'])) return $this->resultError(["Код подтверждения не указан"]);
 
-        $link = $params['variables']['link'];
+        $link = $params['link'];
         $result = UserModel::checkConfirmationCode($link);
         if (!$result) return $this->resultError(["Неверный код подтверждения"]);
         return [
