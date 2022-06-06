@@ -4,7 +4,10 @@ namespace Abramenko\RestApi\Application;
 
 use Abramenko\RestApi\Controllers\Controller;
 
+use AltoRouter;
 use Abramenko\RestApi\Application\Exceptions\{ApplicationThrowable, ApplicationException};
+use Exception;
+use Throwable;
 
 /**
  * Application
@@ -12,14 +15,14 @@ use Abramenko\RestApi\Application\Exceptions\{ApplicationThrowable, ApplicationE
 class Application
 {
     private array $_controllers = [];
-    private \AltoRouter $_router;
+    private AltoRouter $_router;
     private string|object|array $_defaultRoute = '';
     private array $_requestVariables = [];
     private bool $_redirectToRoot = true;
 
     public function __construct()
     {
-        $this->_router = new \AltoRouter();
+        $this->_router = new AltoRouter();
     }
 
     /**
@@ -36,7 +39,7 @@ class Application
     /**
      * run
      *
-     * @return void
+     * @return bool
      * @throws ApplicationException
      * @throws ApplicationThrowable
      */
@@ -56,9 +59,9 @@ class Application
             if (!empty($this->_defaultRoute)) {
                 return $this->defaultRoute();
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new ApplicationException($e);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new ApplicationThrowable($e);
         }
         return false;
@@ -69,6 +72,7 @@ class Application
      * Запуск всех необходимых установочных процедур
      *
      * @return void
+     * @throws ApplicationException
      */
     protected function setup(): void
     {
@@ -81,13 +85,13 @@ class Application
      * Получаем все возможные элементы окружения
      *
      * @return void
+     * @throws ApplicationException
      */
     protected function setupRequestVariables(): void
     {
-        $this->_requestVariables = [
-            "variables" => (!empty($_REQUEST) ? $_REQUEST : []),
-            "body" => $this->getRequestBody()
-        ];
+        $variables = (!empty($_REQUEST) ? $_REQUEST : []);
+        $body = $this->getRequestBody();
+        $this->_requestVariables = [...(array)$variables, ...(array)$body];
     }
 
     /**
@@ -105,7 +109,7 @@ class Application
 
         try {
             $data = json_decode($data, true);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new ApplicationException($e);
         }
         return $data;
@@ -115,10 +119,10 @@ class Application
      * fileGetContents
      * Оболочка для теста работы функции получения данных с потока
      *
-     * @param mixed $input
+     * @param mixed $input // Используется только для тестов
      * @return string
      */
-    protected function fileGetContents($input = false): string
+    protected function fileGetContents(mixed $input = false): string
     {
         if (!empty($input)) return $input;
         return file_get_contents('php://input');
@@ -136,7 +140,7 @@ class Application
         if (empty($this->_controllers)) return;
 
         $routes = [];
-        foreach ($this->_controllers as $name => $controller) {
+        foreach ($this->_controllers as $controller) {
             $routes += $controller->getRoutes();
         }
         $this->_router->addRoutes($routes);
