@@ -57,7 +57,10 @@ class UserModelTest extends TestCase
     {
         $user = UserModel::New("a.abramenko75@gmail.com", "superSecret");
         $code = UserModel::SaveConfirmationCode($user['id']);
-        $this->assertEquals(true, UserModel::checkConfirmationCode($code), 'Проверка существования кода подтверждения');
+        $this->assertEquals(
+            ['id' => $user['id'], 'email' => "a.abramenko75@gmail.com"],
+            UserModel::checkConfirmationCode($code),
+            'Проверка существования кода подтверждения');
         UserModel::DeleteUser((int)$user['id']);
     }
 }
