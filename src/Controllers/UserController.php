@@ -38,5 +38,13 @@ class UserController extends Controller
                 $this->_userService->Confirmation($params)
             );
         });
+
+        // Логин
+        $this->routePost("/login", function ($params) {
+            $this->responseJSON(
+                $this->_userService->Login($params)
+            );
+        });
+
     }
 }
