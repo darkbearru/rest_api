@@ -3,24 +3,16 @@
 namespace Abramenko\RestApi\Services;
 
 use Abramenko\RestApi\Helpers\FormHelper;
+use Exception;
 use Abramenko\RestApi\Models\{TokenModel, UserModel};
 
 class UserService extends Service
 {
     /**
-     * @return bool
-     */
-    public static function Authorized(): bool
-    {
-
-        return true;
-    }
-
-    /**
      * @param array $params
-     * @return object|array
+     * @return array
      */
-    public function Registration(array $params): object|array
+    public function Registration(array $params): array
     {
         $params = $this->checkRegistrationForm($params);
         if (!empty($params['error'])) return $this->resultError($params['error']);
@@ -46,11 +38,10 @@ class UserService extends Service
                 "expires" => time() + TokenService::REFRESH_TOKEN_LIFETIME * 60 * 60 * 24
             ]
         );
-        return [
-            "result" => true,
+        return $this->resultOk([
             "user" => $user,
             "accessToken" => $tokens["access"]
-        ];
+        ]);
     }
 
     /**
@@ -75,7 +66,7 @@ class UserService extends Service
         return ["variables" => $params];
     }
 
-    public function Confirmation(array $params): array|object
+    public function Confirmation(array $params): array
     {
         if (empty($params)) return $this->resultError(["Данные не преданы или не распознаны"]);
 
@@ -83,27 +74,49 @@ class UserService extends Service
 
         $link = $params['link'];
         $result = UserModel::checkConfirmationCode($link);
+
         if (!$result) return $this->resultError(["Неверный код подтверждения"]);
-        return [
-            "result" => true
-        ];
+
+        return $this->resultOk($result);
     }
 
     /**
      * @param array $params
-     * @return bool
+     * @return array
      */
-    public function Login(array $params): bool
+    public function Login(array $params): array
     {
-        return true;
+        if (!($tokenData = self::Authorized())) return $this->resultError(["Требуется авторизация"], 401);
+
+        return $tokenData;
+    }
+
+    /**
+     * @return bool|array
+     */
+    public static function Authorized(): bool|array
+    {
+        $headers = getallheaders();
+        if (empty ($headers['Authorization'])) return false;
+        try {
+            list ($keyword, $token) = explode(' ', ($headers['Authorization']));
+        } catch (Exception $e) {
+            $keyword = $token = '';
+        }
+        if ($keyword != 'Bearer' || empty($token)) return false;
+
+        $tokenData = TokenService::ValidateAccessToken($token);
+        if (empty($tokenData)) return false;
+
+        return $tokenData;
     }
 
     /**
      * @param array|null $params
-     * @return bool
+     * @return array
      */
-    public function Logout(?array $params): bool
+    public function Logout(?array $params): array
     {
-        return true;
+        return [];
     }
 }
