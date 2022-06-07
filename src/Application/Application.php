@@ -157,7 +157,7 @@ class Application
         // Выполняем поиск роутингом подходящего маршрута
         $match = $this->_router->match();
         if (is_array($match) && is_callable($match['target'])) {
-            $this->_requestVariables["variables"] += $match['params'];
+            $this->_requestVariables += $match['params'];
             call_user_func_array(
                 $match['target'],
                 [$this->_requestVariables]
