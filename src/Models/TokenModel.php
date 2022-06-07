@@ -35,7 +35,7 @@ class TokenModel
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function deleteToken($refreshToken): bool|array|object
+    public static function deleteToken($refreshToken): bool|array|object
     {
         $db = DataBase::getInstance();
 
