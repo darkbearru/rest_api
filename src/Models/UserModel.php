@@ -40,10 +40,47 @@ class UserModel
     }
 
     /**
+     * IsUserExists
+     * Проверяем на существование пользователя с таким email-ом
+     *
+     * @param string $email
+     * @param array $tokenData
+     * @return bool
+     */
+    public static function IsUserExists(string $email, array $tokenData = []): bool
+    {
+        $db = DataBase::getInstance();
+
+        $where = 'email=:email';
+        $params = [
+            ':email' => $email
+        ];
+        if (empty ($email) && !empty($tokenData)) {
+            $where = '';
+            $params = [];
+            if (!empty($tokenData['user'])) {
+                foreach ($tokenData['user'] as $key => $value) {
+                    $where .= ($where != '' ? " and " : "") . "$key=:$key";
+                    $params [':' . $key] = $value;
+                }
+            }
+        }
+
+        $statement = $db->prepare(
+            "SELECT id FROM Users WHERE $where"
+        );
+        $statement->execute($params);
+        $rows = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if (empty($rows)) return false;
+        return true;
+    }
+
+    /**
      * SaveConfirmationLink
      * Сохраняем ссылку для подтверждения пользователя
      *
-     * @param  int $userID
+     * @param int $userID
      * @return string
      */
     public static function SaveConfirmationCode(int $userID): string
@@ -56,8 +93,8 @@ class UserModel
             "REPLACE INTO users_links (`user_id`, `link`, `created_at`) VALUES (:user_id, :link, now())"
         );
         $statement->execute([
-            ':user_id'  => $userID,
-            ':link'    => $hash
+            ':user_id' => $userID,
+            ':link' => $hash
         ]);
         // Удаляем старые записи по данным для подтверждения
         $statement = $db->prepare(
@@ -68,12 +105,12 @@ class UserModel
         return $hash;
     }
 
-    public static function checkConfirmationCode(string $link): bool
+    public static function checkConfirmationCode(string $link): array|bool
     {
         $db = DataBase::getInstance();
 
         $statement = $db->prepare(
-            "SELECT users.id FROM users left join users_links on users.id=users_links.user_id  WHERE link=:link"
+            "SELECT users.id, users.email FROM users left join users_links on users.id=users_links.user_id  WHERE link=:link"
         );
         $statement->execute([':link' => $link]);
         $rows = $statement->fetch(PDO::FETCH_ASSOC);
@@ -90,30 +127,9 @@ class UserModel
             "DELETE FROM users_links WHERE user_id=:user_id"
         );
         $statement->execute([
-            ':user_id'  => $rows['id']
+            ':user_id' => $rows['id']
         ]);
-        return true;
-    }
-
-    /**
-     * IsUserExists
-     * Проверяем на существование пользователя с таким email-ом
-     *
-     * @param  string $email
-     * @return bool
-     */
-    public static function IsUserExists(string $email): bool
-    {
-        $db = DataBase::getInstance();
-
-        $statement = $db->prepare(
-            "SELECT id FROM Users WHERE email=:email"
-        );
-        $statement->execute([':email' => $email]);
-        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-        if (empty($rows)) return false;
-        return true;
+        return (array)$rows;
     }
 
     /**
