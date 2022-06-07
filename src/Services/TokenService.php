@@ -2,6 +2,9 @@
 
 namespace Abramenko\RestApi\Services;
 
+use Abramenko\RestApi\Models\TokenModel;
+use Abramenko\RestApi\Models\UserModel;
+use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -18,46 +21,79 @@ class TokenService extends Service
             "access" => self::ghostGenerate(
                 $payload,
                 self::ACCESS_TOKEN_KEY,
-                "+" . (string)self::ACCESS_TOKEN_LIFETIME . " day"
+                "+" . self::ACCESS_TOKEN_LIFETIME . " day"
             ),
             "refresh" => self::ghostGenerate(
                 $payload,
                 self::REFRESH_TOKEN_KEY,
-                "+" . (string)self::REFRESH_TOKEN_LIFETIME . " day"
+                "+" . self::REFRESH_TOKEN_LIFETIME . " day"
             )
         ];
     }
 
     protected static function ghostGenerate(array $payload, string $key, string $expire): string
     {
+        $payload = [
+            'user' => $payload
+        ];
         $payload['iat'] = strtotime("now");
         $payload['exp'] = strtotime($expire);
         return JWT::encode($payload, $key, 'HS256');
     }
 
-    public static function Compare(string $token): bool
+    public static function ValidateAccessToken(string $token): array|object
     {
-        if (self::ghostCompare($token, self::ACCESS_TOKEN_KEY)) return true;
-        if (empty ($_COOKIE['refreshToken'])) return false;
-        if (self::ghostCompare($_COOKIE['refreshToken'], self::REFRESH_TOKEN_KEY)) return true;
-        return false;
+        // Проверяем accessToken на его влидность и срок жизни
+        $tokenData = self::ValidateToken($token, self::ACCESS_TOKEN_KEY);
+        if (!empty($tokenData)) {
+            if (UserModel::IsUserExists('', $tokenData)) return $tokenData;
+        }
+
+        // В случае проблем с accessToken, проверяем refreshToken
+        if (!($token = self::ValidateRefreshToken('', $tokenData['id']))) return [];
+        return [
+            "access" => self::ghostGenerate(
+                $token['user'],
+                self::ACCESS_TOKEN_KEY,
+                "+" . self::ACCESS_TOKEN_LIFETIME . " day"
+            ),
+            'user' => $token['user']
+        ];
     }
 
-    protected static function ghostCompare(string $token, string $key): bool
+    protected static function ValidateToken(string $token, string $key): array|object
     {
-        $decoded = (array)JWT::decode($token, new Key($key, 'HS256'));
-        echo '<pre>';
-        print_r($decoded);
-        echo '</pre>';
-        return true;
-
-
+        try {
+            $decoded = (array)JWT::decode($token, new Key($key, 'HS256'));
+        } catch (Exception $e) {
+            return [];
+        }
+        if ($decoded['exp'] < strtotime('now')) return [];
+        return $decoded;
     }
 
-    public static function Save(): bool
+    public static function ValidateRefreshToken(string $refreshToken = '', int $userID = 0): array|object
     {
-        return true;
+        if (!$refreshToken) {
+            if (empty ($_COOKIE)) return [];
+            if (empty ($_COOKIE['refreshToken'])) return [];
+            $refreshToken = $_COOKIE['refreshToken'];
+        }
+        $token = self::ValidateToken($refreshToken, self::REFRESH_TOKEN_KEY);
+        if (empty($token)) return [];
+        // Access Token userID и данные refreshToken userID не совпадают
+        // Отменяем доступ
+        if ($token['id'] != $userID) return [];
+        // Если с refreshToken проблем нет, то проверяем на его соответствие с тем что хранится в базе
+        $fromBase = TokenModel::validateToken($refreshToken);
+        if (empty($fromBase)) {
+            TokenModel::deleteToken($refreshToken);
+            return [];
+        }
+        return [
+            'id' => $fromBase['id'],
+            'email' => $fromBase['email']
+        ];
     }
-
 
 }
