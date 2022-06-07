@@ -3,21 +3,24 @@
 namespace Abramenko\RestApi\Services;
 
 
+use Abramenko\RestApi\Errors\Errors;
+
 abstract class Service
 {
 
-    protected function resultOk(?object $data): object
+    protected function resultOk(?array $data): array
     {
-        return (object)[
+        return [
             "result" => "ok",
             "errors" => false,
             "data" => $data
         ];
     }
 
-    protected function resultError(string|array $errors = []): object
+    protected function resultError(string|array $errors = [], int $errorCode = 200): array
     {
-        return (object)[
+        if ($errorCode > 200) Errors::errorHeader($errorCode);
+        return [
             "result" => "error",
             "errors" => $errors
         ];
