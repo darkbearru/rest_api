@@ -105,6 +105,13 @@ class UserModel
         return $hash;
     }
 
+    /**
+     * checkConfirmationCode
+     * Проверка кода подтверждения
+     *
+     * @param string $link
+     * @return array|bool
+     */
     public static function checkConfirmationCode(string $link): array|bool
     {
         $db = DataBase::getInstance();
@@ -139,7 +146,7 @@ class UserModel
      * @param string|int $user User ID или User Email
      * @return bool
      */
-    public static function DeleteUser(string|int $user): bool
+    public static function deleteUser(string|int $user): bool
     {
         $db = DataBase::getInstance();
 
@@ -148,5 +155,28 @@ class UserModel
         );
         return $statement->execute([':user' => $user]);
 
+    }
+
+    /**
+     * checkLoginInfo
+     * Проверка информации для авторизации
+     *
+     * @param string $email
+     * @param string $password
+     * @return bool|int
+     */
+    public static function checkLoginInfo(string $email, string $password): bool|int
+    {
+        $db = DataBase::getInstance();
+        $password = md5($password);
+        $statement = $db->prepare(
+            "SELECT id FROM Users WHERE email=:email and password=:password"
+        );
+        $statement->execute([
+            ':email' => $email,
+            ':password' => $password
+        ]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return empty($row['id']) ? false : $row['id'];
     }
 }

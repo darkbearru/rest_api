@@ -7,6 +7,9 @@ use PHPUnit\Framework\TestCase;
 
 class UserModelTest extends TestCase
 {
+    public static string $user_email = 'a.abramenko@gmail.com';
+    public static string $user_password = 'superSecret';
+    public static int $user_id = 0;
 
     public function testCanCheckIsUserExists()
     {
@@ -33,11 +36,20 @@ class UserModelTest extends TestCase
 
     public function testCanCreateNewUser()
     {
-        $user = UserModel::New("a.abramenko@gmail.com", "superSecret");
+        $user = UserModel::New(self::$user_email, self::$user_password);
         $this->assertIsArray($user, 'Проверка возращается ли массив');
         $this->assertMatchesRegularExpression('/^[1-9]\d+$/', $user['id'], 'Проверка созданного ID пользователя');
-        $this->assertEquals("a.abramenko@gmail.com", $user['email'], 'Проверка на совпадение email');
+        $this->assertEquals(self::$user_email, $user['email'], 'Проверка на совпадение email');
+        self::$user_id = $user['id'];
+    }
 
+    public function testCheckLoginInfo()
+    {
+        $this->assertEquals(
+            self::$user_id,
+            UserModel::checkLoginInfo(self::$user_email, self::$user_password),
+            'Проверка возможности логина с указанными параметрами'
+        );
     }
 
     public function testDeleteUser()
