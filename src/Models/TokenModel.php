@@ -19,7 +19,7 @@ class TokenModel
             ':token' => $refreshToken
         ]);
 
-        return true;
+        return empty((int)$statement->errorCode());
     }
 
     public static function validateToken($refreshToken): bool|array|object
@@ -45,6 +45,6 @@ class TokenModel
         $statement->execute([
             ':token' => $refreshToken
         ]);
-        return $statement->fetch(PDO::FETCH_ASSOC);
+        return empty((int)$statement->errorCode());
     }
 }
