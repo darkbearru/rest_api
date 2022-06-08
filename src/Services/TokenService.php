@@ -46,11 +46,19 @@ class TokenService extends Service
         // Проверяем accessToken на его влидность и срок жизни
         $tokenData = self::ValidateToken($token, self::ACCESS_TOKEN_KEY);
         if (!empty($tokenData)) {
-            if (UserModel::IsUserExists('', $tokenData)) return $tokenData;
+            if (UserModel::IsUserExists('', $tokenData)) {
+                // Пользовательсуществует, но надо проверить есть ли привязанные к нему refreshToken-ы
+                // Иначе мы разлогились
+                if (TokenModel::refreshTokenExists($tokenData['user']->id)) return $tokenData;
+            }
         }
 
         // В случае проблем с accessToken, проверяем refreshToken
-        if (!($token = self::ValidateRefreshToken('', $tokenData['id']))) return [];
+        if (!($token = self::ValidateRefreshToken(
+            '',
+            !empty($tokenData) ? $tokenData['user']->id : 0))
+        ) return [];
+
         return [
             "access" => self::ghostGenerate(
                 $token['user'],
@@ -61,7 +69,7 @@ class TokenService extends Service
         ];
     }
 
-    protected static function ValidateToken(string $token, string $key): array|object
+    public static function ValidateToken(string $token, string $key): array|object
     {
         try {
             $decoded = (array)JWT::decode($token, new Key($key, 'HS256'));
@@ -83,7 +91,8 @@ class TokenService extends Service
         if (empty($token)) return [];
         // Access Token userID и данные refreshToken userID не совпадают
         // Отменяем доступ
-        if ($token['id'] != $userID) return [];
+        if ($token['user']->id != $userID) return [];
+
         // Если с refreshToken проблем нет, то проверяем на его соответствие с тем что хранится в базе
         $fromBase = TokenModel::validateToken($refreshToken);
         if (empty($fromBase)) {
@@ -94,6 +103,19 @@ class TokenService extends Service
             'id' => $fromBase['id'],
             'email' => $fromBase['email']
         ];
+    }
+
+    public static function getTokenFromHeader(): bool|string
+    {
+        $headers = getallheaders();
+        if (empty ($headers['Authorization'])) return false;
+        try {
+            list ($keyword, $token) = explode(' ', ($headers['Authorization']));
+        } catch (Exception $e) {
+            $keyword = $token = '';
+        }
+        if ($keyword != 'Bearer' || empty($token)) return false;
+        return $token;
     }
 
 }
