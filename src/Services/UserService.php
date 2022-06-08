@@ -15,7 +15,8 @@ class UserService extends Service
     public function Registration(array $params): array
     {
         $params = $this->checkRegistrationForm($params);
-        if (!empty($params['error'])) return $this->resultError($params['error']);
+
+        if (!empty($params['errors'])) return $this->resultError($params['errors']);
 
         ["email" => $email, "password" => $password] = $params["variables"];
 
