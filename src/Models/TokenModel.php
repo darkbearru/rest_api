@@ -47,4 +47,31 @@ class TokenModel
         ]);
         return empty((int)$statement->errorCode());
     }
+
+    public static function deleteTokenByUserId(int $id): bool
+    {
+        $db = DataBase::getInstance();
+
+        $statement = $db->prepare(
+            "DELETE FROM tokens WHERE `user_id`=:id"
+        );
+        $statement->execute([
+            ':id' => $id
+        ]);
+        return true;
+    }
+
+    public static function refreshTokenExists(int $id): bool
+    {
+        $db = DataBase::getInstance();
+
+        $statement = $db->prepare(
+            "SELECT id FROM tokens WHERE `user_id`=:id"
+        );
+        $statement->execute([
+            ':id' => $id
+        ]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return !empty($result);
+    }
 }

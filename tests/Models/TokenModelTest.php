@@ -19,7 +19,7 @@ class TokenModelTest extends TestCase
         $token = self::createToken($user);
         self::$userID = $user['id'];
         $result = TokenModel::Save(self::$userID, $token);
-        $this->assertEquals(true, $result);
+        $this->assertEquals(true, $result, 'Проверка создания нового токена');
     }
 
     public static function createToken(array $payload = ['test' => 1]): string
@@ -40,7 +40,16 @@ class TokenModelTest extends TestCase
             list ('email' => $email) = $result;
         }
 
-        $this->assertEquals('superuser@super.ru', $email);
+        $this->assertEquals('superuser@super.ru', $email, 'Проверка валидации Токена');
+    }
+
+    public function testIsRefreshTokenExistsWork()
+    {
+        $this->assertEquals(
+            true,
+            TokenModel::refreshTokenExists(self::$userID),
+            'Проверка существования RefreshToken у пользователя'
+        );
     }
 
     public function testDoesTokenDeleteWork()
