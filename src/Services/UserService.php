@@ -8,6 +8,29 @@ use Abramenko\RestApi\Models\{TokenModel, UserModel};
 
 class UserService extends Service
 {
+    public function CheckAuthorizeStatus($params): array
+    {
+        // Код проверки для раздела требующего авторизации
+        if (!($tokenData = self::Authorized())) return $this->resultError(["Требуется авторизация"], 401);
+        return $this->resultOk([
+            'status' => 'Вы авторизованны',
+            'user' => $tokenData['user']
+        ]);
+    }
+
+    /**
+     * @return bool|array
+     */
+    public static function Authorized(): bool|array
+    {
+        if (!($token = TokenService::getTokenFromHeader())) return false;
+
+        $tokenData = TokenService::ValidateAccessToken($token);
+        if (empty($tokenData)) return false;
+
+        return $tokenData;
+    }
+
     /**
      * @param array $params
      * @return array
@@ -22,27 +45,13 @@ class UserService extends Service
 
         // Сохранить в базу данных
         if (!($user = UserModel::New($email, $password))) {
-            return $this->resultError(["Пользовательс с «{$email}» уже существует"]);
+            return $this->resultError(["Пользователь с «{$email}» уже существует"]);
         }
 
         $code = UserModel::SaveConfirmationCode($user['id']);
         MailService::Send($user['email'], "<p>Необходимо <a href=\"http://localhost:8050/api/users/confirmation/$code\">подтвердить email</a></p>");
 
-        $tokens = TokenService::Generate((array)$user);
-        TokenModel::Save($user['id'], $tokens['refresh']);
-
-        setcookie(
-            "refreshToken",
-            $tokens["refresh"],
-            [
-                "httponly" => true,
-                "expires" => time() + TokenService::REFRESH_TOKEN_LIFETIME * 60 * 60 * 24
-            ]
-        );
-        return $this->resultOk([
-            "user" => $user,
-            "accessToken" => $tokens["access"]
-        ]);
+        return self::GenerateTokensForUser((array)$user);
     }
 
     /**
@@ -67,6 +76,25 @@ class UserService extends Service
         return ["variables" => $params];
     }
 
+    protected function GenerateTokensForUser(array $user): array
+    {
+        $tokens = TokenService::Generate((array)$user);
+        TokenModel::Save($user['id'], $tokens['refresh']);
+
+        setcookie(
+            "refreshToken",
+            $tokens["refresh"],
+            [
+                "httponly" => true,
+                "expires" => time() + TokenService::REFRESH_TOKEN_LIFETIME * 60 * 60 * 24
+            ]
+        );
+        return $this->resultOk([
+            "user" => $user,
+            "accessToken" => $tokens["access"]
+        ]);
+    }
+
     public function Confirmation(array $params): array
     {
         if (empty($params)) return $this->resultError(["Данные не преданы или не распознаны"]);
@@ -87,29 +115,20 @@ class UserService extends Service
      */
     public function Login(array $params): array
     {
-        if (!($tokenData = self::Authorized())) return $this->resultError(["Требуется авторизация"], 401);
+        $params = $this->checkRegistrationForm($params);
+        if (!empty($params['errors'])) return $this->resultError($params['errors']);
 
-        return $tokenData;
-    }
+        ["email" => $email, "password" => $password] = $params["variables"];
 
-    /**
-     * @return bool|array
-     */
-    public static function Authorized(): bool|array
-    {
-        $headers = getallheaders();
-        if (empty ($headers['Authorization'])) return false;
-        try {
-            list ($keyword, $token) = explode(' ', ($headers['Authorization']));
-        } catch (Exception $e) {
-            $keyword = $token = '';
+        if (!($user = UserModel::checkLoginInfo($email, $password))) {
+            return $this->resultError(["Пользователь с «{$email}» не существует или неверный пароль"]);
         }
-        if ($keyword != 'Bearer' || empty($token)) return false;
 
-        $tokenData = TokenService::ValidateAccessToken($token);
-        if (empty($tokenData)) return false;
-
-        return $tokenData;
+        $user = [
+            'id' => $user,
+            'email' => $email
+        ];
+        return self::GenerateTokensForUser($user);
     }
 
     /**
@@ -118,6 +137,22 @@ class UserService extends Service
      */
     public function Logout(?array $params): array
     {
-        return [];
+        if (empty ($_COOKIE)) return [];
+        if (empty ($_COOKIE['refreshToken'])) return [];
+        $refreshToken = $_COOKIE['refreshToken'];
+
+        $token = TokenService::ValidateToken($refreshToken, TokenService::REFRESH_TOKEN_KEY);
+
+        TokenModel::deleteToken($refreshToken);
+        setcookie("refreshToken", '', ["httponly" => true, "expires" => -1]);
+
+        if ($token) {
+            if (!empty ($token['user'])) {
+                $user = (array)$token['user'];
+                TokenModel::deleteTokenByUserId($user['id']);
+            }
+        }
+
+        return $this->resultOk([]);
     }
 }
