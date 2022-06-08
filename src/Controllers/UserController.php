@@ -46,5 +46,19 @@ class UserController extends Controller
             );
         });
 
+        // Логоут
+        $this->routePost("/logout", function ($params) {
+            $this->responseJSON(
+                $this->_userService->Logout($params)
+            );
+        });
+
+        // Проверка авторизованности
+        $this->routeGet("/authorized", function ($params) {
+            $this->responseJSON(
+                $this->_userService->CheckAuthorizeStatus($params)
+            );
+        });
+
     }
 }
