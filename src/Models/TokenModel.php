@@ -72,6 +72,21 @@ class TokenModel
             ':id' => $id
         ]);
         $result = $statement->fetch(PDO::FETCH_ASSOC);
+
         return !empty($result);
+    }
+
+    public static function getTokenByUserId(int $id): string
+    {
+        $db = DataBase::getInstance();
+
+        $statement = $db->prepare(
+            "SELECT refresh_token FROM tokens WHERE `user_id`=:id"
+        );
+        $statement->execute([
+            ':id' => $id
+        ]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return (!empty($result) ? $result['refresh_token'] : '');
     }
 }

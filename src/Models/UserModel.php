@@ -96,13 +96,34 @@ class UserModel
             ':user_id' => $userID,
             ':link' => $hash
         ]);
+
         // Удаляем старые записи по данным для подтверждения
+        self::deleteOldLinks();
+
+        return $hash;
+    }
+
+    protected static function deleteOldLinks(): void
+    {
+        $db = DataBase::getInstance();
+
         $statement = $db->prepare(
             "DELETE FROM users_links WHERE created_at < DATE_ADD(now(), INTERVAL -1 WEEK)"
         );
         $statement->execute();
+    }
 
-        return $hash;
+    public static function getUserConfirmationLink(int $id): string
+    {
+        $db = DataBase::getInstance();
+        $statement = $db->prepare(
+            "SELECT link FROM users_links WHERE user_id=:id"
+        );
+        $statement->execute([
+            ':id' => $id
+        ]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return (!empty ($result) ? $result['link'] : '');
     }
 
     /**
