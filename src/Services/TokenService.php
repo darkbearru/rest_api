@@ -14,6 +14,7 @@ class TokenService extends Service
     const ACCESS_TOKEN_LIFETIME = 1;
     const REFRESH_TOKEN_KEY = 'JWT-ErT334s-Secrets2-R4efrEsh-34Key';
     const REFRESH_TOKEN_LIFETIME = 30;
+    public static string $testAccessToken = '';
 
     public static function Generate(array $payload): array|bool
     {
@@ -107,6 +108,9 @@ class TokenService extends Service
 
     public static function getTokenFromHeader(): bool|string
     {
+        // Специальная проверка для тестирования, переменная задаётся в тестах
+        if (!empty(self::$testAccessToken)) return self::$testAccessToken;
+
         $headers = getallheaders();
         if (empty ($headers['Authorization'])) return false;
         try {
