@@ -26,6 +26,7 @@ class UserService extends Service
         if (!($token = TokenService::getTokenFromHeader())) return false;
 
         $tokenData = TokenService::ValidateAccessToken($token);
+
         if (empty($tokenData)) return false;
 
         return $tokenData;
@@ -81,14 +82,16 @@ class UserService extends Service
         $tokens = TokenService::Generate((array)$user);
         TokenModel::Save($user['id'], $tokens['refresh']);
 
-        setcookie(
-            "refreshToken",
-            $tokens["refresh"],
-            [
-                "httponly" => true,
-                "expires" => time() + TokenService::REFRESH_TOKEN_LIFETIME * 60 * 60 * 24
-            ]
-        );
+        if (!headers_sent()) {
+            setcookie(
+                "refreshToken",
+                $tokens["refresh"],
+                [
+                    "httponly" => true,
+                    "expires" => time() + TokenService::REFRESH_TOKEN_LIFETIME * 60 * 60 * 24
+                ]
+            );
+        }
         return $this->resultOk([
             "user" => $user,
             "accessToken" => $tokens["access"]
@@ -144,7 +147,9 @@ class UserService extends Service
         $token = TokenService::ValidateToken($refreshToken, TokenService::REFRESH_TOKEN_KEY);
 
         TokenModel::deleteToken($refreshToken);
-        setcookie("refreshToken", '', ["httponly" => true, "expires" => -1]);
+        if (!headers_sent()) {
+            setcookie("refreshToken", '', ["httponly" => true, "expires" => -1]);
+        }
 
         if ($token) {
             if (!empty ($token['user'])) {
