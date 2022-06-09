@@ -1,13 +1,29 @@
 <?php
-
+// Используем строгую типизацию
 declare(strict_types=1);
 
-require __DIR__ . '/vendor/autoload.php';
+$loader = require __DIR__ . '/vendor/autoload.php';
 
-use \Abramenko\Experiments\Email;
+use Abramenko\RestApi\Application\Application;
+use Abramenko\RestApi\Controllers\UserController;
 
-$email = \Abramenko\Experiments\Email::fromString("a.abramenko@chita.ru");
+$app = new Application();
 
-echo "<pre>";
-print_r((string) $email);
-echo "</pre>";
+$app->setDefaultRoute("routingTest");
+$app->addController(new UserController());
+
+try {
+    if (!$app->run()) {
+        echo "No Default Page<br />";
+    }
+} catch (Throwable$e) {
+}
+
+
+function routingTest($variables): void
+{
+    echo "Default Route is work<br />";
+    echo "<pre>";
+    print_r($variables);
+    echo "</pre>";
+}
